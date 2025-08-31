@@ -1,0 +1,5 @@
+segment-pages
+.env
+node_modules
+.parcel-cache
+dist
