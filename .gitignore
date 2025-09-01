@@ -3,3 +3,4 @@ segment-pages
 node_modules
 .parcel-cache
 dist
+build
