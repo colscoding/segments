@@ -8,7 +8,8 @@
     "start": "concurrently \"npm:start:server\" \"npm:serve\"",
     "browser": "chromium-browser --disable-web-security --user-data-dir=./chrome-dev-session http://localhost:8080",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "parcel build public/index.html --dist-dir docs"
+    "build": "parcel build public/index.html --dist-dir docs --public-url ./",
+    "serve:docs": "http-server docs"
   },
   "keywords": [],
   "author": "",
