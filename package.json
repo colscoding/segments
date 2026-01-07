@@ -3,25 +3,15 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start:server": "node server.js",
-    "serve": "parcel public/index.html --port 8080",
-    "start": "concurrently \"npm:start:server\" \"npm:serve\"",
-    "browser": "chromium-browser --disable-web-security --user-data-dir=./chrome-dev-session http://localhost:8080",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "parcel build public/index.html --dist-dir docs --public-url ./",
-    "serve:docs": "http-server docs"
+    "start": "parcel public/index.html --port 8080",
+    "build": "parcel build public/index.html --dist-dir docs --public-url ./"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
-  "dependencies": {
-    "csv-parser": "^3.2.0",
-    "express": "^5.1.0"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "concurrently": "^9.2.1",
-    "http-server": "^14.1.1",
     "parcel": "^2.15.4"
   }
 }

@@ -1,6 +1,23 @@
-segment-pages
+# Cached/downloaded data
+segment-pages/
+
+# Environment
 .env
-node_modules
-.parcel-cache
-dist
-build
+
+# Dependencies
+node_modules/
+
+# Build cache
+.parcel-cache/
+dist/
+build/
+
+# Intermediate data files
+segments.json
+segments_partial_*.json
+segmentsComplete.json
+transformed-segments.json
+SegmentsRunning.csv
+
+# Chrome dev session
+chrome-dev-session/

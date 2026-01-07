@@ -2,10 +2,15 @@
 document.addEventListener('DOMContentLoaded', () => {
     const segmentsContainer = document.getElementById('segments-container');
     const applyButton = document.getElementById('apply-filters');
+    const filterMapBoundsCheckbox = document.getElementById('filter-map-bounds');
 
+    // Initialize Map
+    const map = L.map('map');
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
 
-
-
+    let mapMarkers = [];
     let allSegments = [];
 
     // Pace string "M:SS" to seconds
@@ -18,9 +23,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderSegments = (segments) => {
         segmentsContainer.innerHTML = '';
+
+        // Clear existing markers
+        mapMarkers.forEach(marker => map.removeLayer(marker));
+        mapMarkers = [];
+
         segments.filter(Boolean).forEach(segment => {
+            // Map processing
+            if (segment.start_latlng && segment.start_latlng.length === 2) {
+                const marker = L.marker(segment.start_latlng).bindPopup(`<b>${segment.name}</b><br>Diff: ${(segment.distance / 1000).toFixed(2)} km`);
+                marker.on('click', () => {
+                    const card = document.getElementById(`segment-card-${segment.id}`);
+                    if (card) {
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        card.classList.add('border-primary', 'border-3');
+                        setTimeout(() => card.classList.remove('border-primary', 'border-3'), 2000);
+                    }
+                });
+                marker.addTo(map);
+                mapMarkers.push(marker);
+
+                if (segment.end_latlng && segment.end_latlng.length === 2) {
+                    const polyline = L.polyline([segment.start_latlng, segment.end_latlng], { color: 'red' }).addTo(map);
+                    mapMarkers.push(polyline);
+                }
+            }
+
             const segmentElement = document.createElement('div');
             segmentElement.classList.add('col-md-4', 'mb-4');
+            segmentElement.id = `segment-card-${segment.id}`;
 
             const card = document.createElement('div');
             card.classList.add('card', 'h-100');
@@ -95,10 +126,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const minLastPace = parseFloat(document.getElementById('min-leaderboard-last').value) || 0;
         const maxLastPace = parseFloat(document.getElementById('max-leaderboard-last').value) || Infinity;
 
+        const filterByMap = filterMapBoundsCheckbox.checked;
+        const mapBounds = map.getBounds();
+
         filteredSegments = filteredSegments.filter(segment => {
             const distanceInKm = parseFloat(segment.distance) / 1000;
             const firstPace = paceToSeconds(segment.leaderboard[0]?.pace);
             const lastPace = paceToSeconds(segment.leaderboard[segment.leaderboard.length - 1]?.pace);
+
+            let inMapBounds = true;
+            if (filterByMap) {
+                if (segment.start_latlng && segment.start_latlng.length === 2) {
+                    inMapBounds = mapBounds.contains(segment.start_latlng);
+                } else {
+                    inMapBounds = false;
+                }
+            }
 
             return distanceInKm >= minDistance &&
                 distanceInKm <= maxDistance &&
@@ -109,7 +152,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 firstPace >= minFirstPace &&
                 firstPace <= maxFirstPace &&
                 lastPace >= minLastPace &&
-                lastPace <= maxLastPace;
+                lastPace <= maxLastPace &&
+                inMapBounds;
         });
 
         // Sort values
@@ -155,9 +199,23 @@ document.addEventListener('DOMContentLoaded', () => {
         renderSegments(filteredSegments);
     };
 
-    const localSegments = getSegmentsFromLocalFile()
+    const localSegments = getSegmentsFromLocalFile();
     allSegments = localSegments.filter(Boolean)
         .filter(x => x?.attempts && Array.isArray(x?.leaderboard));
+
+    // Fit map to segments initialy
+    if (allSegments.length > 0) {
+        const bounds = L.latLngBounds(allSegments.filter(s => s.start_latlng).map(s => s.start_latlng));
+        map.fitBounds(bounds);
+    }
+
     renderSegments(allSegments);
     applyButton.addEventListener('click', applyFiltersAndSorting);
+
+    map.on('moveend', () => {
+        if (filterMapBoundsCheckbox.checked) {
+            applyFiltersAndSorting();
+        }
+    });
+    filterMapBoundsCheckbox.addEventListener('change', applyFiltersAndSorting);
 });
